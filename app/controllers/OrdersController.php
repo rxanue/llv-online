@@ -103,6 +103,9 @@ class OrdersController extends Controller
         $u = (array) $user;
         $customerName = $u['username'] ?? 'Customer';
         $customerEmail = $u['email'] ?? '';
+        
+        // KUNIN ANG ROOM/TABLE NUMBER MULA SA SESSION
+        $roomTable = $_SESSION['room_table'] ?? 'N/A';
 
         $orderRef = 'ORD-' . strtoupper(substr(uniqid(), -5));
         $totalAmount = 0;
@@ -119,10 +122,11 @@ class OrdersController extends Controller
         }
         $notes = rtrim($notes, ', ');
 
-        // I-save sa food_orders
+        // I-save sa food_orders (KASAMA ANG TABLE_NUMBER)
         $db->table('food_orders')->insert([
             'customer_name' => $customerName,
             'customer_contact' => $customerEmail,
+            'table_number' => $roomTable, // <-- BAGONG DAGDAG
             'order_type' => 'dine_in',
             'status' => 'pending',
             'total_amount' => $totalAmount,
@@ -165,10 +169,11 @@ class OrdersController extends Controller
         $nt = (array) $newTransaction;
         $transactionId = $nt['id'] ?? 0;
 
-        // I-clear ang cart
+        // I-clear ang cart at room_table
         unset($_SESSION['cart']);
+        unset($_SESSION['room_table']); // <-- BINURA NA PARA HINDI MAIWA
 
-        // I-redirect sa Stripe Checkout imbes na sa Orders page
+        // I-redirect sa Stripe Checkout
         header("Location: " . base_url('payment/checkout/' . $transactionId));
         exit;
     }

@@ -10,6 +10,7 @@ if (file_exists($vendorPath)) {
 
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use Dompdf\Dompdf;
 
 class PaymentController extends Controller
 {
@@ -46,7 +47,7 @@ class PaymentController extends Controller
                 exit;
             }
 
-            $domain = 'http://127.0.0.1:3000';
+            $domain = getenv('BASE_URL') ?: 'http://127.0.0.1:3000';
 
             $session = \Stripe\Checkout\Session::create([
                 'line_items' => [[
@@ -101,9 +102,9 @@ class PaymentController extends Controller
                 $t = (array) $transaction;
                 $desc = $t['description'] ?? '';
                 $ref = $t['reference_no'] ?? '';
-                $amount = $t['amount'] ?? 0;
 
-                // --- QR CODE GENERATION (NAKA-SETUP NA PARA SA MAHABANG TEXT) ---
+                // --- QR CODE GENERATION (NAKA-POINT SA PDF LINK) ---
+                $domain = getenv('BASE_URL') ?: 'http://127.0.0.1:3000';
                 $qrDir = ROOT_DIR . 'public/qrcodes/';
                 if (!is_dir($qrDir)) {
                     mkdir($qrDir, 0777, true);
@@ -112,24 +113,21 @@ class PaymentController extends Controller
                 $qrFileName = 'receipt_' . $ref . '.png';
                 $qrFilePath = $qrDir . $qrFileName;
                 
-                // Pinaikli natin ang laman para hindi mag-overflow
-                $qrContent = "Ref: " . $ref . "\n";
-                $qrContent .= "Amount: PHP " . number_format($amount, 2) . "\n";
-                $qrContent .= "Status: PAID";
+                // Ito na yung link na ilalagay sa QR. Pag na-scan, dadalhin sa PDF.
+                $qrContent = $domain . '/payment/receipt/' . $transactionId;
                 
-                // I-setup ang options na kayang humawak ng mas mahabang text (Version 10)
                 $options = new QROptions([
-                    'version'      => 10, // Mas mataas na version = mas maraming data
+                    'version'      => 10,
                     'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-                    'eccLevel'     => QRCode::ECC_L, // Pinakamababang error correction para mas maraming data
+                    'eccLevel'     => QRCode::ECC_L,
                     'scale'        => 5,
                 ]);
                 
-                // Generate at save
                 (new QRCode($options))->render($qrContent, $qrFilePath);
                 
                 $_SESSION['receipt_qr'] = 'qrcodes/' . $qrFileName;
-                // ----------------------------------------------
+                $_SESSION['receipt_txn_id'] = $transactionId; // <--- IDINAGDAG NATIN
+                // ---------------------------------------------------
 
                 if (strpos($desc, 'Room Reservation') !== false) {
                     if (!empty($ref)) {
@@ -167,5 +165,91 @@ class PaymentController extends Controller
         }
 
         redirect($redirectTo);
+    }
+
+    // BAGONG FUNCTION PARA SA PDF RECEIPT
+    public function download_receipt($transactionId)
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['user_id'])) { redirect('login'); exit; }
+
+        $db = load_class('database');
+        $transaction = $db->table('transactions')->where('id', $transactionId)->get();
+        $t = (array) $transaction;
+
+        if (empty($t)) {
+            die("Receipt not found.");
+        }
+
+        $ref = $t['reference_no'] ?? 'N/A';
+        $desc = $t['description'] ?? '';
+        $amount = $t['amount'] ?? 0;
+        $status = strtoupper($t['status'] ?? 'PENDING');
+        $date = date('F j, Y g:i A', strtotime($t['created_at'] ?? 'now'));
+
+        // Disenyo ng resibo (HTML to PDF)
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #14243d; padding: 40px; }
+                .header { text-align: center; border-bottom: 3px solid #ff7900; padding-bottom: 20px; margin-bottom: 30px; }
+                .header h1 { margin: 0; font-size: 32px; color: #14243d; }
+                .header p { margin: 5px 0 0 0; color: #666; }
+                .details-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                .details-table th, .details-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eaeaea; }
+                .details-table th { background: #f9f9f9; width: 30%; color: #666; }
+                .details-table td { font-weight: bold; }
+                .total-box { margin-top: 30px; text-align: right; font-size: 24px; font-weight: bold; color: #07559b; }
+                .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+                .status { padding: 5px 10px; border-radius: 15px; font-size: 14px; color: white; background: #07559b; display: inline-block;}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>LLV ONLINE RECEIPT</h1>
+                <p>Official Payment Receipt</p>
+            </div>
+
+            <table class="details-table">
+                <tr>
+                    <th>Reference Number</th>
+                    <td>' . htmlspecialchars($ref) . '</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>' . htmlspecialchars($desc) . '</td>
+                </tr>
+                <tr>
+                    <th>Date Issued</th>
+                    <td>' . $date . '</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td><span class="status">' . $status . '</span></td>
+                </tr>
+            </table>
+
+            <div class="total-box">
+                TOTAL AMOUNT: PHP ' . number_format((float)$amount, 2) . '
+            </div>
+
+            <div class="footer">
+                Thank you for choosing LLV Online!<br>
+                For inquiries, please contact us at support@llvonline.com
+            </div>
+        </body>
+        </html>';
+
+        // Generate PDF
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // I-display sa browser (pwedeng i-download o i-print)
+        $dompdf->stream("LLV-Receipt-" . $ref . ".pdf", ["Attachment" => false]);
+        exit;
     }
 }

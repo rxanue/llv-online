@@ -52,6 +52,7 @@ $router->delete('/api/{resource}/{id}', 'VillasApiController::destroy');
 // Stripe Payment Routes
 $router->get('/payment/checkout/{id}', 'PaymentController::checkout');
 $router->get('/payment/success', 'PaymentController::success');
+$router->get('/payment/receipt/{id}', 'PaymentController::download_receipt');
 
 //Map
 $router->get('/map', 'DiveservicesController::map');
@@ -103,3 +104,7 @@ $router->get('/staff/reservations', 'StaffController::manage_reservations');
 $router->post('/staff/reservations/update', 'StaffController::update_reservation_status');
 $router->get('/staff/divebookings', 'StaffController::manage_divebookings');
 $router->post('/staff/divebookings/update', 'StaffController::update_divebooking_status');
+
+// STAFF SCANNING
+$router->get('/staff/scan', 'StaffController::scan_page');
+$router->post('/staff/confirm_booking', 'StaffController::confirm_booking');

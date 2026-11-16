@@ -10,7 +10,7 @@ class RestaurantController extends Controller
 
         $this->call->model('MenuItemModel');
         $this->call->model('FoodCategoryModel'); 
-        $this->call->model('RecommendationModel'); // <--- IDINAGDAG
+        $this->call->model('RecommendationModel'); 
         
         $items = $this->MenuItemModel->getAllItems();
         $categories = $this->FoodCategoryModel->getAllCategories();
@@ -35,7 +35,7 @@ class RestaurantController extends Controller
             'menu_items' => $items,
             'categories' => $categories,
             'cart_count' => $cartCount,
-            'recommendations' => $recommendations // <--- IPINASA SA VIEW
+            'recommendations' => $recommendations
         ];
 
         $this->call->view('customer/restaurant', $data);
@@ -48,6 +48,7 @@ class RestaurantController extends Controller
 
         $itemId = $_POST['item_id'] ?? 0;
         $quantity = (int)($_POST['quantity'] ?? 1);
+        $roomTable = trim($_POST['room_table'] ?? ''); // KUNIN ANG ROOM/TABLE NUMBER
 
         if ($itemId > 0 && $quantity > 0) {
             if (!isset($_SESSION['cart'])) {
@@ -58,6 +59,11 @@ class RestaurantController extends Controller
                 $_SESSION['cart'][$itemId] += $quantity;
             } else {
                 $_SESSION['cart'][$itemId] = $quantity;
+            }
+            
+            // I-save ang room/table number sa session
+            if (!empty($roomTable)) {
+                $_SESSION['room_table'] = $roomTable;
             }
             
             $_SESSION['success'] = 'Item added to your order!';

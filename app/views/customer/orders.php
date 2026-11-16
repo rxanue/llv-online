@@ -8,16 +8,16 @@ include __DIR__ . '/../layouts/header.php';
 ?>
 
 <style>
-    .orders-container { padding: 40px 10%; background: #f9f9f9; min-height: 70vh; }
+    .orders-container { padding: 40px 10%; background: var(--bg-color); min-height: 70vh; }
     .orders-header { text-align: center; margin-bottom: 30px; }
-    .orders-header h1 { color: #14243d; margin: 0 0 10px 0; font-size: 36px; }
+    .orders-header h1 { color: var(--text-color); margin: 0 0 10px 0; font-size: 36px; }
 
-    .receipt-box { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 40px; border-top: 5px solid #ff7900; }
-    .receipt-title { font-size: 24px; color: #14243d; margin-top: 0; border-bottom: 1px dashed #ccc; padding-bottom: 15px; margin-bottom: 20px;}
+    .receipt-box { background: var(--card-bg); border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 40px; border-top: 5px solid #ff7900; }
+    .receipt-title { font-size: 24px; color: var(--text-color); margin-top: 0; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; margin-bottom: 20px;}
     
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-    th { font-weight: 600; color: #666; text-transform: uppercase; font-size: 12px;}
+    th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    th { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 12px;}
     
     .qty-input { width: 60px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; text-align: center; }
     .btn-remove { color: #dc3545; text-decoration: none; font-weight: bold; font-size: 14px; }
@@ -29,12 +29,17 @@ include __DIR__ . '/../layouts/header.php';
     
     .btn-add-more { display: inline-block; background: #ff7900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 15px; }
     
-    .empty { text-align: center; color: #888; padding: 40px; }
+    .empty { text-align: center; color: var(--text-muted); padding: 40px; }
 
     .status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: capitalize; display: inline-block; }
     .status-paid { background: #d4edda; color: #155724; }
     .status-pending { background: #fff3cd; color: #856404; }
     .status-cancelled { background: #f8d7da; color: #721c24; }
+
+    /* QR Code Box */
+    .qr-box { text-align: center; padding: 20px; background: var(--card-bg); margin-bottom: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px dashed #28a745; }
+    .qr-box img { width: 200px; height: 200px; border-radius: 8px; margin-bottom: 15px; }
+    .btn-download { display: inline-block; background: #14243d; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
 </style>
 
 <div class="orders-container">
@@ -45,14 +50,18 @@ include __DIR__ . '/../layouts/header.php';
 
     <!-- QR CODE RECEIPT DISPLAY -->
     <?php if(isset($_SESSION['receipt_qr'])): ?>
-        <div style="text-align: center; padding: 20px; background: #fff; margin-bottom: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px dashed #28a745;">
+        <div class="qr-box">
             <h3 style="color: #28a745; margin-top: 0;">Payment Successful! Here is your Receipt</h3>
-            <p style="color: #666; margin-bottom: 20px;">Scan this QR code to verify your transaction.</p>
-            <img src="<?= base_url($_SESSION['receipt_qr']) ?>" alt="Receipt QR Code" style="width: 200px; height: 200px; border-radius: 8px;">
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Scan this QR code to view your digital receipt.</p>
+            <img src="<?= base_url($_SESSION['receipt_qr']) ?>" alt="Receipt QR Code">
             <br>
-            <a href="<?= base_url($_SESSION['receipt_qr']) ?>" download style="display: inline-block; margin-top: 15px; background: #14243d; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold;">Download QR Receipt</a>
+            
+            <!-- ITO YUNG BINAGO NATIN: PDF DOWNLOAD LINK -->
+            <a href="<?= base_url('payment/receipt/' . ($_SESSION['receipt_txn_id'] ?? 0)) ?>" class="btn-download" style="background: #07559b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Download PDF Receipt
+            </a>
         </div>
-        <?php unset($_SESSION['receipt_qr']); ?>
+        <?php unset($_SESSION['receipt_qr']); unset($_SESSION['receipt_txn_id']); ?>
     <?php endif; ?>
     <!-- END QR CODE RECEIPT -->
 

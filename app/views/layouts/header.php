@@ -82,7 +82,8 @@
         body.dark-mode .service-card,
         body.dark-mode .menu-card,
         body.dark-mode .dashboard-container,
-        body.dark-mode section { 
+        body.dark-mode section,
+        body.dark-mode .scan-card { 
             background-color: var(--card-bg) !important; 
             color: var(--text-color) !important;
         }
@@ -160,6 +161,7 @@
             <?php elseif ($currentRole === 'staff'): ?>
                 <div class="role-badge" style="background: #ff7900;">STAFF: <?= htmlspecialchars($currentName) ?></div>
                 <a href="<?= base_url('staff/dashboard') ?>" style="background: #ff7900; color: white !important;">Staff Dashboard</a>
+                <a href="<?= base_url('staff/scan') ?>" style="background: #07559b; color: white !important;">Scan / Confirm Booking</a> <!-- IDINAGDAG ANG SCAN -->
                 <a href="<?= base_url('staff/orders') ?>">Manage Orders</a>
                 <a href="<?= base_url('staff/reservations') ?>">Manage Bookings</a>
                 <a href="<?= base_url('staff/divebookings') ?>">Manage Dive Bookings</a>
@@ -191,6 +193,7 @@
             
         <?php elseif ($currentRole === 'staff'): ?>
             <a href="<?= base_url('staff/dashboard') ?>" class="<?= ($active_page == 'staff') ? 'active' : '' ?>">Staff Home</a>
+            <a href="<?= base_url('staff/scan') ?>" class="<?= ($active_page == 'scan') ? 'active' : '' ?>">Scan</a> <!-- IDINAGDAG ANG SCAN -->
             <a href="<?= base_url('staff/orders') ?>" class="<?= ($active_page == 'orders') ? 'active' : '' ?>">Orders</a>
             <a href="<?= base_url('staff/reservations') ?>" class="<?= ($active_page == 'reservations') ? 'active' : '' ?>">Bookings</a>
             <a href="<?= base_url('staff/divebookings') ?>" class="<?= ($active_page == 'staff_divebookings') ? 'active' : '' ?>">Dive Bookings</a>
@@ -202,4 +205,4 @@
             <a href="<?= base_url('map') ?>" class="<?= ($active_page == 'map') ? 'active' : '' ?>">Dive Map</a>
             <a href="<?= base_url('restaurant') ?>" class="<?= ($active_page == 'restaurant') ? 'active' : '' ?>">Restaurant</a>
         <?php endif; ?>
-    </nav>  
+    </nav>

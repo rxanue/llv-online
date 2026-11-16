@@ -116,7 +116,7 @@ class StaffController extends Controller
         redirect('staff/reservations');
     }
 
-    // 4. MANAGE DIVE BOOKINGS (BAGONG DAGDAG)
+    // 4. MANAGE DIVE BOOKINGS
     public function manage_divebookings()
     {
         $this->checkStaff();
@@ -154,5 +154,63 @@ class StaffController extends Controller
         }
 
         redirect('staff/divebookings');
+    }
+
+    // 5. SCAN PAGE (BAGONG DAGDAG)
+    public function scan_page()
+    {
+        $this->checkStaff();
+        $this->call->view('staff/scan');
+    }
+
+    // 6. PROCESS CONFIRMATION (BAGONG DAGDAG)
+    public function confirm_booking()
+    {
+        $this->checkStaff();
+        $ref = strtoupper(trim($_POST['reference'] ?? ''));
+        $db = load_class('database');
+
+        if (empty($ref)) {
+            $_SESSION['error'] = 'Please enter a reference number.';
+            redirect('staff/scan');
+            exit;
+        }
+
+        // 1. Hanapin sa Room Reservations
+        $res = $db->table('reservations')->where('booking_reference', $ref)->get();
+        $r = (array) $res;
+
+        if (!empty($r)) {
+            if (strtolower($r['booking_status']) === 'confirmed') {
+                $_SESSION['error'] = 'This room booking is already confirmed.';
+            } else {
+                $db->table('reservations')->where('booking_reference', $ref)->update([
+                    'booking_status' => 'confirmed'
+                ]);
+                $_SESSION['success'] = 'Room Booking ' . $ref . ' has been confirmed!';
+            }
+            redirect('staff/scan');
+            exit;
+        }
+
+        // 2. Hanapin sa Dive Bookings
+        $dive = $db->table('dive_bookings')->where('booking_reference', $ref)->get();
+        $d = (array) $dive;
+
+        if (!empty($d)) {
+            if (strtolower($d['booking_status']) === 'confirmed') {
+                $_SESSION['error'] = 'This dive booking is already confirmed.';
+            } else {
+                $db->table('dive_bookings')->where('booking_reference', $ref)->update([
+                    'booking_status' => 'confirmed'
+                ]);
+                $_SESSION['success'] = 'Dive Booking ' . $ref . ' has been confirmed!';
+            }
+            redirect('staff/scan');
+            exit;
+        }
+
+        $_SESSION['error'] = 'Reference number not found in our system.';
+        redirect('staff/scan');
     }
 }
