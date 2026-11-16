@@ -118,7 +118,7 @@ switch (strtolower(config_item('environment')))
 {
 	case 'development':
 		_handlers();
-		error_reporting(-1);
+		error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 		ini_set('display_errors', 1);
 	break;
 
@@ -248,7 +248,7 @@ if (php_sapi_name() === 'cli') {
 } else {
     $base  = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
 	$path  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-	$url   = $router->sanitize_url(substr($path, strlen($base)) ?: '/');
+	$url = $router->sanitize_url(substr($path ?? '', strlen($base)) ?: '/');
     $method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : 'GET';
 }
 

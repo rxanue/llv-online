@@ -1,26 +1,45 @@
-# macOS
+# ==========================================
+# SYSTEM & OS FILES
+# ==========================================
 .DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# Environment
+# ==========================================
+# IDE & EDITORS
+# ==========================================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# ==========================================
+# ENVIRONMENT VARIABLES (SECRETS)
+# ==========================================
 .env
+.env.*
 !.env.example
 
-# Dependencies
-vendor/
-app/vendor/
-composer.lock
+# ==========================================
+# SENSITIVE CONFIGURATIONS
+# ==========================================
+app/config/database.php
+app/config/StripeConfig.php
 
-# Cache & Logs
+# ==========================================
+# DEPENDENCIES
+# ==========================================
+/vendor/
+/app/vendor/
+/node_modules/
+
+# ==========================================
+# CACHE, LOGS & TEMPORARY FILES
+# ==========================================
+*.log
+*.cache
 runtime/*
 !runtime/.htaccess
 !runtime/index.html
-*.log
-*.cache
-
-# IDE
-.idea/
-.vscode/
-*.sublime-*
-
-# OS
-Thumbs.db
+public/qrcodes/*.png

@@ -222,35 +222,43 @@ class Invoker {
 			}
 		}
 
-		ob_start();
-
-		$view_file = str_replace('\\', '/', trim($view_file, '/'));
-
-		$parts = explode('/', $view_file);
-		$file = array_pop($parts);
-		$module_or_nested = array_shift($parts);
-		$nested = implode('/', $parts);
-
-		$has_extension = pathinfo($file, PATHINFO_EXTENSION) !== '';
-		$file_name = $has_extension ? $file : "{$file}.php";
+		$view_file = str_replace('\\', '/', trim((string) $view_file, '/'));
+		if ($view_file === '' || strpos($view_file, "\0") !== false || in_array('..', explode('/', $view_file), true)) {
+			throw new RuntimeException('Invalid view file');
+		}
 
 		$app_dir = rtrim(APP_DIR, '/\\') . '/';
+		$has_extension = pathinfo($view_file, PATHINFO_EXTENSION) !== '';
+		$view_name = $has_extension ? $view_file : $view_file . '.php';
 
-		$module_path = $app_dir . "modules/{$module_or_nested}/views/" . ($nested ? "{$nested}/" : '') . $file_name;
-		if (file_exists($module_path)) {
-			require $module_path;
-			echo ob_get_clean();
-			return;
+		$direct_view = $app_dir . 'views/' . $view_name;
+		if (is_file($direct_view)) {
+			$resolved_view = $direct_view;
+		} else {
+			$parts = explode('/', $view_file);
+			$file = array_pop($parts);	
+			$module = array_shift($parts);
+			$nested = implode('/', $parts);
+			$resolved_file = $has_extension ? $file : $file . '.php';
+			$module_view = $module
+				? $app_dir . "modules/{$module}/views/" . ($nested ? "{$nested}/" : '') . $resolved_file
+				: null;
+
+			if ($module_view !== null && is_file($module_view)) {
+				$resolved_view = $module_view;
+			} else {
+				throw new RuntimeException("View {$view_file} not found in module or app/views");
+			}
 		}
 
-		$app_path = $app_dir . "views/" . ($nested ? "{$module_or_nested}/{$nested}/" : "{$module_or_nested}/") . $file_name;
-		if (file_exists($app_path)) {
-			require $app_path;
+		ob_start();
+		try {
+			require $resolved_view;
 			echo ob_get_clean();
-			return;
+		} catch (Throwable $exception) {
+			ob_end_clean();
+			throw $exception;
 		}
-
-		throw new RuntimeException("View {$view_file} not found in module or app/views");
 	}
 
 
@@ -260,6 +268,7 @@ class Invoker {
 	 * @param mixed $helper
 	 * @return void
 	 */
+
 	public function helper($helper)
 	{
 		if ( is_array($helper) ) {

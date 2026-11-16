@@ -1,47 +1,105 @@
 <?php
 defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
-/**
- * ------------------------------------------------------------------
- * LavaLust - an opensource lightweight PHP MVC Framework
- * ------------------------------------------------------------------
- *
- * MIT License
- *
- * Copyright (c) 2020 Ronald M. Marasigan
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package LavaLust
- * @author Ronald M. Marasigan <ronald.marasigan@yahoo.com>
- * @since Version 1
- * @link https://github.com/ronmarasigan/LavaLust
- * @license https://opensource.org/licenses/MIT MIT License
- */
 
-/*
-| -------------------------------------------------------------------
-| URI ROUTING
-| -------------------------------------------------------------------
-| Here is where you can register web routes for your application.
-|
-|
-*/
 /** @var object $router **/
 
-$router->get('/', 'Welcome::index');
+// FRONTEND
+$router->get('/', 'LandingController::index');
+$router->get('/landing', 'LandingController::index');
+
+// LOGIN AND SIGNUP
+$router->get('/login', 'LoginController::index');
+$router->post('/auth/process', 'LoginController::authenticate');
+
+$router->get('/signup', 'LoginController::showSignup');
+$router->post('/signup/process', 'LoginController::register');
+
+$router->get('/logout', 'LoginController::logout');
+
+// DASHBOARD
+$router->get('/dashboard', 'DashboardController::index');
+
+// CUSTOMER AND ADMIN PAGES
+$router->get('/rooms', 'RoomsController::index');
+$router->post('/rooms/store', 'RoomsController::store');
+$router->get('/reservations', 'ReservationsController::index');
+$router->get('/restaurant', 'RestaurantController::index');
+$router->post('/restaurant/add_to_cart', 'RestaurantController::add_to_cart');
+$router->get('/orders', 'OrdersController::index');
+$router->post('/orders/update_cart', 'OrdersController::update_cart');
+$router->get('/orders/remove/{id}', 'OrdersController::remove_item');
+$router->post('/orders/checkout', 'OrdersController::checkout');
+$router->get('/inventory', 'InventoryController::index');
+$router->get('/diveservices', 'DiveservicesController::index');
+$router->post('/diveservices/store', 'DiveservicesController::store');
+$router->get('/transactions', 'TransactionsController::index');
+
+// ADMIN SETTINGS
+$router->get('/admin-settings', 'AdminSettingsController::index');
+
+// API
+$router->get('/api/health', 'VillasApiController::health');
+$router->get('/api/dashboard', 'VillasApiController::dashboard');
+
+$router->get('/api/{resource}', 'VillasApiController::index');
+$router->get('/api/{resource}/{id}', 'VillasApiController::show');
+
+$router->post('/api/{resource}', 'VillasApiController::store');
+$router->put('/api/{resource}/{id}', 'VillasApiController::update');
+$router->patch('/api/{resource}/{id}', 'VillasApiController::update');
+$router->delete('/api/{resource}/{id}', 'VillasApiController::destroy');
+
+// Stripe Payment Routes
+$router->get('/payment/checkout/{id}', 'PaymentController::checkout');
+$router->get('/payment/success', 'PaymentController::success');
+
+//Map
+$router->get('/map', 'DiveservicesController::map');
+
+//Settings
+$router->get('/settings', 'SettingsController::index');
+$router->post('/settings/update_profile', 'SettingsController::update_profile');
+$router->post('/settings/update_password', 'SettingsController::update_password');
+
+// ADMIN & STAFF DASHBOARDS
+$router->get('/admin/dashboard', 'AdminController::index');
+$router->get('/staff/dashboard', 'StaffController::index');
+
+// ADMIN MANAGE ROUTES
+$router->get('/admin/rooms', 'AdminController::manage_rooms');
+$router->post('/admin/rooms/store', 'AdminController::store_room');
+$router->post('/admin/rooms/delete/{id}', 'AdminController::delete_room');
+
+$router->get('/admin/diveservices', 'AdminController::manage_diveservices');
+$router->post('/admin/diveservices/store', 'AdminController::store_diveservice');
+$router->post('/admin/diveservices/delete/{id}', 'AdminController::delete_diveservice');
+
+$router->get('/admin/restaurant', 'AdminController::manage_restaurant');
+$router->post('/admin/restaurant/store', 'AdminController::store_menuitem');
+$router->post('/admin/restaurant/delete/{id}', 'AdminController::delete_menuitem');
+
+// MANAGE USERS
+$router->get('/admin/users', 'AdminController::manage_users');
+$router->post('/admin/users/store', 'AdminController::store_user');
+$router->post('/admin/users/update', 'AdminController::update_user');
+$router->post('/admin/users/delete/{id}', 'AdminController::delete_user');
+
+// EDIT ROUTES PARA SA ROOMS
+$router->get('/admin/rooms/edit/{id}', 'AdminController::edit_room');
+$router->post('/admin/rooms/update', 'AdminController::update_room');
+
+// EDIT ROUTES PARA SA DIVE SERVICES
+$router->get('/admin/diveservices/edit/{id}', 'AdminController::edit_diveservice');
+$router->post('/admin/diveservices/update', 'AdminController::update_diveservice');
+
+// EDIT ROUTES PARA SA RESTAURANT
+$router->get('/admin/restaurant/edit/{id}', 'AdminController::edit_menuitem');
+$router->post('/admin/restaurant/update', 'AdminController::update_menuitem');
+
+// STAFF ROUTES
+$router->get('/staff/orders', 'StaffController::manage_orders');
+$router->post('/staff/orders/update', 'StaffController::update_order_status');
+$router->get('/staff/reservations', 'StaffController::manage_reservations');
+$router->post('/staff/reservations/update', 'StaffController::update_reservation_status');
+$router->get('/staff/divebookings', 'StaffController::manage_divebookings');
+$router->post('/staff/divebookings/update', 'StaffController::update_divebooking_status');
